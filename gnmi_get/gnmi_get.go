@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -85,13 +86,21 @@ func main() {
 
 	cli := pb.NewGNMIClient(conn)
 
-	encoding, ok := pb.Encoding_value[*encodingName]
-	if !ok {
-		var gnmiEncodingList []string
-		for _, name := range pb.Encoding_name {
-			gnmiEncodingList = append(gnmiEncodingList, name)
+
+	var encoding int32
+	encoding64, err := strconv.ParseInt(*encodingName, 10, 32)
+	if err != nil {
+		var ok bool
+		encoding, ok = pb.Encoding_value[*encodingName]
+		if !ok {
+			var gnmiEncodingList []string
+			for _, name := range pb.Encoding_name {
+				gnmiEncodingList = append(gnmiEncodingList, name)
+			}
+			log.Exitf("Supported encodings: %s", strings.Join(gnmiEncodingList, ", "))
 		}
-		log.Exitf("Supported encodings: %s", strings.Join(gnmiEncodingList, ", "))
+	} else {
+		encoding = int32(encoding64)
 	}
 
 	var dataTypeEnum = pb.GetRequest_DataType(*dataType)
